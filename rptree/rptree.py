@@ -13,9 +13,9 @@ SPACE_PREFIX = "    "
 
 
 class DirectoryTree:
-    def __init__(self, root_dir, dir_only=False, output_file=sys.stdout):
+    def __init__(self, root_dir, dir_only=False, output_file=sys.stdout, max_depth=None):
         self._output_file = output_file
-        self._generator = _TreeGenerator(root_dir, dir_only)
+        self._generator = _TreeGenerator(root_dir, dir_only, max_depth)
 
     def generate(self):
         tree = self._generator.build_tree()
@@ -32,20 +32,23 @@ class DirectoryTree:
 
 
 class _TreeGenerator:
-    def __init__(self, root_dir, dir_only=False):
+    def __init__(self, root_dir, dir_only=False, max_depth=None):
         self._root_dir = pathlib.Path(root_dir)
         self._dir_only = dir_only
         self._tree = deque()
+        self._max_depth = max_depth
 
     def build_tree(self):
         self._tree_head()
-        self._tree_body(self._root_dir)
+        self._tree_body(self._root_dir, depth=0)
         return self._tree
 
     def _tree_head(self):
         self._tree.append(f"{self._root_dir}{os.sep}")
 
-    def _tree_body(self, directory, prefix=""):
+    def _tree_body(self, directory, prefix="", depth=0):
+        if self._max_depth is not None and depth >= self._max_depth:
+            return
         entries = self._prepare_entries(directory)
         last_index = len(entries) - 1
         for index, entry in enumerate(entries):
@@ -54,7 +57,7 @@ class _TreeGenerator:
                 if index == 0:
                     self._tree.append(prefix + PIPE)
                 self._add_directory(
-                    entry, index, last_index, prefix, connector
+                    entry, index, last_index, prefix, connector, depth
                 )
             else:
                 self._add_file(entry, prefix, connector)
@@ -68,7 +71,7 @@ class _TreeGenerator:
         return sorted(entries, key=lambda entry: entry.is_file())
 
     def _add_directory(
-        self, directory, index, last_index, prefix, connector
+        self, directory, index, last_index, prefix, connector, depth
     ):
         self._tree.append(f"{prefix}{connector} {directory.name}{os.sep}")
         if index != last_index:
@@ -78,6 +81,7 @@ class _TreeGenerator:
         self._tree_body(
             directory=directory,
             prefix=prefix,
+            depth=depth + 1,
         )
         if prefix := prefix.rstrip():
             self._tree.append(prefix)
