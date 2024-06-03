@@ -14,7 +14,7 @@ def main():
         print("The specified root directory doesn't exist")
         sys.exit()
     tree = DirectoryTree(
-        root_dir, dir_only=args.dir_only, output_file=args.output_file
+        root_dir, dir_only=args.dir_only, output_file=args.output_file, max_depth=args.level
     )
     tree.generate()
 

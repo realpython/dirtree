@@ -35,4 +35,12 @@ def parse_cmd_line_arguments():
         default=sys.stdout,
         help="generate a full directory tree and save it to a file",
     )
+    parser.add_argument(
+        "-l",
+        "--level",
+        type=int,
+        metavar="LEVEL",
+        nargs="?",
+        help="limit the depth of the directory tree",
+    )
     return parser.parse_args()
